@@ -106,7 +106,6 @@ vsfs_is_present(void* image)
 /**
  * Format the image into vsfs.
  *
- * NOTE: Must update mtime of the root directory.
  *
  * @param fd     open file descriptor for the disk image file
  * @param buf    scratch buffer of at least VSFS_BLOCK_SIZE bytes
@@ -118,8 +117,7 @@ vsfs_is_present(void* image)
 static bool
 mkfs(void* image, size_t size, mkfs_opts* opts)
 {
-  // NOTE: the mode of the root directory inode should be set
-  //      to S_IFDIR | 0777
+
 
   vsfs_superblock* sb; // ptr to superblock in mmap'd disk image
   bitmap_t* ibmap;     // ptr to inode bitmap in mmap'd disk image
@@ -179,9 +177,9 @@ mkfs(void* image, size_t size, mkfs_opts* opts)
     goto out;
   }
 
-	root_ino->i_mode = S_IFDIR | 0777;
+  root_ino->i_mode = S_IFDIR | 0777;
   root_ino->i_nlink = 2;
-	root_ino->i_size = VSFS_BLOCK_SIZE;
+  root_ino->i_size = VSFS_BLOCK_SIZE;
   root_ino->i_blocks = 1;
 	
 
@@ -194,14 +192,12 @@ mkfs(void* image, size_t size, mkfs_opts* opts)
   // Create '.' and '..' entries in root dir data block.
 
   root_entries = (vsfs_dentry *)(image + (root_ino->i_direct[0]) * VSFS_BLOCK_SIZE);
-	root_entries[0].ino = VSFS_ROOT_INO;
-	strncpy(root_entries[0].name, ".", sizeof(root_entries[0].name));
+  root_entries[0].ino = VSFS_ROOT_INO;
+  strncpy(root_entries[0].name, ".", sizeof(root_entries[0].name));
   root_entries[1].ino = VSFS_ROOT_INO;
-	strncpy(root_entries[1].name, "..", sizeof(root_entries[1].name));
+  strncpy(root_entries[1].name, "..", sizeof(root_entries[1].name));
 
   // Initialize other dir entries in block to invalid / unused state
-  //    Since 0 is a valid inode, use VSFS_INO_MAX to indicate invalid.
-
   for (uint32_t i = 2; i < div_round_up(VSFS_BLOCK_SIZE, sizeof(vsfs_dentry)); i++) { root_entries[i].ino = VSFS_INO_MAX; }
 
   // Initialize fields of superblock after everything else succeeds.
