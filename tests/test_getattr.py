@@ -5,8 +5,6 @@ import expected_values
 
 def test_st_mode(mount_point: str, disk: str) -> None:
     """Test that every file in the filesystem has the expected file type and mode (i.e., st_mode).
-
-    This test is only useful if disk is in expected_values.STATVFS.
     """
     assert disk in expected_values.STATVFS, f'The disk argument {disk} does not have any expected values.'
 
